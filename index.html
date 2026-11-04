@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TURBO // Life-Support & Water Telemetry Console</title>
+  <meta name="description" content="Vercel Edge Dashboard for Turbo the Turtle: Habitat Life-Support, Water Chemistry Analysis, and Filtration Telemetry.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐢</text></svg>">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <span class="brand-icon">🐢</span>
+        <div class="brand-text">
+          <h1>TURBO CONSOLE <span class="brand-badge">EDGE v1.0</span></h1>
+          <p class="brand-sub">Trachemys scripta elegans // Habitat 75G</p>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="status-text">SYSTEM ONLINE</span>
+        </div>
+        <button id="theme-btn" class="btn-icon" title="Toggle Matrix Mode">⚡ Matrix</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- OVERVIEW HERO -->
+    <section class="hero-banner">
+      <div class="hero-meta">
+        <div class="meta-item">
+          <span class="meta-label">Habitat Volume</span>
+          <span class="meta-value">75 Gallons (284 L)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Filtration Dynamic</span>
+          <span class="meta-value">Canister 450 GPH (6x)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Photoperiod Cycle</span>
+          <span class="meta-value">12h Daylight / 12h Dark</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Last Chemical Audit</span>
+          <span class="meta-value" id="last-audit-time">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELEMETRY GAUGES -->
+    <section class="grid-gauges" id="gauges-container">
+      <div class="gauge-card status-nominal" id="card-temp">
+        <div class="gauge-header">
+          <span class="gauge-label">Water Temp</span>
+          <span class="gauge-badge nominal" id="badge-temp">Nominal</span>
+        </div>
+        <div class="gauge-value" id="val-temp">77.4<span class="gauge-unit">°F</span></div>
+        <div class="gauge-footer">
+          <span>Target: 76-80°F</span>
+          <span>Heater: Active</span>
+        </div>
+      </div>
+
+      <div class="gauge-card status-nominal" id="card-basking">
+        <div class="gauge-header">
+          <span class="gauge-label">Basking Temp</span>
+          <span class="gauge-badge nominal" id="badge-basking">Nominal</span>
+        </div>
+        <div class="gauge-value" id="val-basking">89.8<span class="gauge-unit">°F</span></div>
+        <div class="gauge-footer">
+          <span>Target: 88-92°F</span>
+          <span>UVB: 10.0 ON</span>
+        </div>
+      </div>
+
+      <div class="gauge-card status-nominal" id="card-ph">
+        <div class="gauge-header">
+          <span class="gauge-label">Water pH</span>
+          <span class="gauge-badge nominal" id="badge-ph">Nominal</span>
+        </div>
+        <div class="gauge-value" id="val-ph">7.4<span class="gauge-unit">pH</span></div>
+        <div class="gauge-footer">
+          <span>Target: 7.2-7.8</span>
+          <span>Buffer: Stable</span>
+        </div>
+      </div>
+
+      <div class="gauge-card status-nominal" id="card-nh3">
+        <div class="gauge-header">
+          <span class="gauge-label">Ammonia (NH3)</span>
+          <span class="gauge-badge nominal" id="badge-nh3">Safe</span>
+        </div>
+        <div class="gauge-value" id="val-nh3">0.00<span class="gauge-unit">ppm</span></div>
+        <div class="gauge-footer">
+          <span>Limit: 0.00 ppm</span>
+          <span>Toxicity: Zero</span>
+        </div>
+      </div>
+
+      <div class="gauge-card status-nominal" id="card-no2">
+        <div class="gauge-header">
+          <span class="gauge-label">Nitrite (NO2)</span>
+          <span class="gauge-badge nominal" id="badge-no2">Safe</span>
+        </div>
+        <div class="gauge-value" id="val-no2">0.00<span class="gauge-unit">ppm</span></div>
+        <div class="gauge-footer">
+          <span>Limit: 0.00 ppm</span>
+          <span>Stage 2 Bio: OK</span>
+        </div>
+      </div>
+
+      <div class="gauge-card status-nominal" id="card-no3">
+        <div class="gauge-header">
+          <span class="gauge-label">Nitrate (NO3)</span>
+          <span class="gauge-badge nominal" id="badge-no3">Safe</span>
+        </div>
+        <div class="gauge-value" id="val-no3">15<span class="gauge-unit">ppm</span></div>
+        <div class="gauge-footer">
+          <span>Ceiling: 40 ppm</span>
+          <span>WC in: 4 days</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DUAL COLUMN LAYOUT -->
+    <div class="dashboard-grid">
+      <!-- LEFT COLUMN: WATER TEST LAB & LOGS -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- NEW LOG ENTRY FORM -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">🧪 Water Chemistry Audit Station</h2>
+            <span style="font-size: 0.75rem; color: var(--accent-cyan); font-family: var(--font-mono);">API Master Test Kit</span>
+          </div>
+          <form id="water-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="input-date">Timestamp</label>
+                <input type="date" id="input-date" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="input-temp">Temp (°F)</label>
+                <input type="number" step="0.1" id="input-temp" class="form-input" placeholder="77.5" required>
+              </div>
+              <div class="form-group">
+                <label for="input-ph">pH Value</label>
+                <input type="number" step="0.1" id="input-ph" class="form-input" placeholder="7.4" required>
+              </div>
+              <div class="form-group">
+                <label for="input-ammonia">Ammonia (ppm)</label>
+                <input type="number" step="0.01" id="input-ammonia" class="form-input" placeholder="0.00" required>
+              </div>
+              <div class="form-group">
+                <label for="input-nitrite">Nitrite (ppm)</label>
+                <input type="number" step="0.01" id="input-nitrite" class="form-input" placeholder="0.00" required>
+              </div>
+              <div class="form-group">
+                <label for="input-nitrate">Nitrate (ppm)</label>
+                <input type="number" step="1" id="input-nitrate" class="form-input" placeholder="15" required>
+              </div>
+            </div>
+            <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn-primary">⚡ Record Chemical Audit</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- AUDIT HISTORY TABLE -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">📜 Historical Telemetry Archive</h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" id="log-count">0 entries</span>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Audit Date</th>
+                  <th>Water Temp</th>
+                  <th>pH</th>
+                  <th>NH3/NH4</th>
+                  <th>NO2</th>
+                  <th>NO3</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="audit-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN: FILTRATION, NUTRITION & TASKS -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- FILTRATION STAGES -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">⚙️ Filtration Stages</h2>
+            <span style="font-size: 0.75rem; color: var(--accent-green); font-family: var(--font-mono);">Flow: 450 GPH</span>
+          </div>
+          <div class="pipeline">
+            <div class="stage-card">
+              <div class="stage-top">
+                <span class="stage-name">1. Mechanical Trap (Coarse/Fine Foam)</span>
+                <span class="gauge-badge nominal">92% Life</span>
+              </div>
+              <p class="stage-desc">Dual density 20 PPI &amp; 30 PPI coarse polyfoam.</p>
+              <div class="progress-bar"><div class="progress-fill" style="width: 92%;"></div></div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-top">
+                <span class="stage-name">2. Biological Colonization</span>
+                <span class="gauge-badge nominal">98% Nitrifiers</span>
+              </div>
+              <p class="stage-desc">Sintered glass ceramic rings &amp; fluidized K1 bed.</p>
+              <div class="progress-bar"><div class="progress-fill" style="width: 98%;"></div></div>
+            </div>
+            <div class="stage-card">
+              <div class="stage-top">
+                <span class="stage-name">3. Chemical Adsorption (Purigen)</span>
+                <span class="gauge-badge nominal">85% Capacity</span>
+              </div>
+              <p class="stage-desc">Macroporous synthetic polymer resin matrix.</p>
+              <div class="progress-bar"><div class="progress-fill" style="width: 85%;"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- NUTRITION & FEEDING TRACKER -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">🥗 Nutrition &amp; Feeding Schedule</h2>
+            <button id="quick-feed-btn" class="btn-icon" style="padding: 0.25rem 0.6rem;">+ Log Feed</button>
+          </div>
+          <div class="task-list" id="feeding-list">
+            <div class="task-item">
+              <div class="task-check">
+                <input type="checkbox" id="feed-pellets" checked>
+                <label for="feed-pellets">Omega One Aquatic Turtle Pellets</label>
+              </div>
+              <span class="gauge-badge nominal">Head-size portion</span>
+            </div>
+            <div class="task-item">
+              <div class="task-check">
+                <input type="checkbox" id="feed-greens" checked>
+                <label for="feed-greens">Fresh Dandelion &amp; Red Leaf Lettuce</label>
+              </div>
+              <span class="gauge-badge nominal">Ad-libitum</span>
+            </div>
+            <div class="task-item">
+              <div class="task-check">
+                <input type="checkbox" id="feed-calcium">
+                <label for="feed-calcium">Cuttlebone Chunk (Calcium/Beak)</label>
+              </div>
+              <span class="gauge-badge warning">Bi-weekly</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- LIFE SUPPORT MAINTENANCE TASKS -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">🛠️ Habitat Maintenance</h2>
+            <button id="btn-add-task" class="btn-icon" style="padding: 0.25rem 0.6rem;">+ New Task</button>
+          </div>
+          <div class="task-list" id="task-list-container">
+            <!-- Dynamically populated tasks -->
+          </div>
+        </section>
+
+        <!-- SYSTEM BACKUP & RESTORE -->
+        <section class="panel" style="border-style: dashed;">
+          <div class="panel-header">
+            <h2 class="panel-title">💾 Data Sovereignty</h2>
+            <span style="font-size: 0.75rem; color: var(--accent-cyan); font-family: var(--font-mono);">Local First</span>
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button id="btn-export-json" class="btn-icon">📥 Export Telemetry JSON</button>
+            <button id="btn-import-trigger" class="btn-icon">📤 Restore Telemetry JSON</button>
+            <input type="file" id="file-import" accept=".json" style="display: none;">
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <footer>
+    <p>TURBO THE TURTLE LIFE-SUPPORT // VERCEL EDGE HOSTED // SUB-SECOND REVALIDATION</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
